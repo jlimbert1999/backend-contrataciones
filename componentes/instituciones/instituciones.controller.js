@@ -28,7 +28,6 @@ const agregar_institucion = async (req = request, res = response) => {
 const editar_institucion = async (req = request, res = response) => {
     const { sigla } = req.body
     const id_institucion = req.params.id
-    console.log(id_institucion);
     try {
         const instituciondb = await Institucion.findById(id_institucion)
         if (!instituciondb) {
