@@ -5,6 +5,7 @@ const Institucion = require("../instituciones/instituciones.model");
 const obtener_instituciones = async (req = request, res = response) => {
   try {
     const instituciones = await Institucion.find({ activo: true }, "nombre");
+    console.log(instituciones);
     res.json({
       ok: true,
       instituciones,

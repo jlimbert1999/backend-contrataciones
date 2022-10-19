@@ -20,12 +20,17 @@ const UserScheme = Schema({
     cargo: {
         type: String,
         required: true
+    },
+    activo: {
+        type: Boolean,
+        default:true
     }
 })
 UserScheme.method('toJSON', function () {
     //convertir el documento mongoose a object
-    const { __v, password, ...object } = this.toObject()
+    const { __v, _id,...object } = this.toObject()
+    object.id_funcionario=_id
     return object
 })
 
-module.exports = model('Funcionarios', UserScheme)
+module.exports = model('funcionarios', UserScheme)
