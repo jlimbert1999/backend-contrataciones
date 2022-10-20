@@ -24,6 +24,10 @@ const UserScheme = Schema({
     activo: {
         type: Boolean,
         default:true
+    },
+    cuenta:{
+        type: Boolean,
+        default:false
     }
 })
 UserScheme.method('toJSON', function () {

@@ -2,9 +2,8 @@ const { Schema, model } = require('mongoose')
 
 const CuentasScheme = Schema({
     funcionario: {
-        type: Schema.Types.ObjectId,
-        ref: 'funcionarios',
-        default: null
+        type: Schema.Types.ObjectId || null,
+        ref: 'funcionarios'
     },
     dependencia: {
         type: Schema.Types.ObjectId,
