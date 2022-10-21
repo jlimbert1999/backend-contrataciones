@@ -7,6 +7,7 @@ const dbConection = require('./database/config')
 require('dotenv').config()
 app.use(cors())
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 dbConection()
 app.use(allroutes)
 
