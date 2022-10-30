@@ -63,13 +63,14 @@ const editar_institucion = async (req = request, res = response) => {
 
 
 const obtener_instituciones = async (req = request, res = response) => {
-    let { desde, filas } = req.query
-    desde = parseInt(desde) || 0
-    filas = parseInt(filas) || 10
+    let { pageIndex, rows } = req.query
+    pageIndex = parseInt(pageIndex) || 0
+    rows = parseInt(rows) || 10
+    pageIndex = rows * pageIndex
     try {
         const [instituciones, total] = await Promise.all(
             [
-                Institucion.find({}).skip(desde).limit(filas),
+                Institucion.find({}).sort({ _id: -1 }).skip(pageIndex).limit(rows),
                 Institucion.count()
             ]
         )
@@ -90,10 +91,16 @@ const buscar_instituciones = async (req = request, res = response) => {
     const termino = req.params.termino
     try {
         const regex = new RegExp(termino, 'i')
-        const instituciones = await Institucion.find({ nombre: regex })
+        const [instituciones, total] = await Promise.all(
+            [
+                Institucion.find({ $or: [{ nombre: regex }, { sigla: regex }] }),
+                Institucion.find({ $or: [{ nombre: regex }, { sigla: regex }] }).count()
+            ]
+        )
         res.json({
             ok: true,
-            instituciones
+            instituciones,
+            total
         })
     } catch (error) {
         console.log('[Server]: Error (buscar instituciones) =>', error);

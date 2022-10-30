@@ -5,7 +5,6 @@ const Institucion = require("../instituciones/instituciones.model");
 const obtener_instituciones = async (req = request, res = response) => {
   try {
     const instituciones = await Institucion.find({ activo: true }, "nombre");
-    console.log(instituciones);
     res.json({
       ok: true,
       instituciones,
@@ -22,15 +21,16 @@ const obtener_instituciones = async (req = request, res = response) => {
   }
 };
 const obtener_dependencias = async (req = request, res = response) => {
-  let { desde, filas } = req.query;
-  desde = parseInt(desde) || 0;
-  filas = parseInt(filas) || 10;
+  let { pageIndex, rows } = req.query;
+  pageIndex = parseInt(pageIndex) || 0;
+  rows = parseInt(rows) || 10;
+  pageIndex = pageIndex * rows
   try {
     let [dependencias, total] = await Promise.all([
-      Dependendencia.find()
+      Dependendencia.find({}).sort({ _id: -1 })
         .populate("institucion", "sigla")
-        .skip(desde)
-        .limit(filas),
+        .skip(pageIndex)
+        .limit(rows),
       Dependendencia.count(),
     ]);
 
@@ -127,10 +127,10 @@ const cambiar_situacion_dependencia = async (req = request, res = response) => {
   }
 };
 const buscar_dependencia = async (req = request, res = response) => {
-  const termino=req.params.termino
+  const termino = req.params.termino
   try {
     const regex = new RegExp(termino, 'i')
-    const dependencias = await Dependendencia.find({$or: [ { nombre:regex }, { sigla:regex} ]}).populate('institucion', 'sigla');
+    const dependencias = await Dependendencia.find({ $or: [{ nombre: regex }, { sigla: regex }] }).populate('institucion', 'sigla');
     res.json({
       ok: true,
       dependencias,

@@ -1,6 +1,5 @@
 const { Schema, model } = require('mongoose')
-
-const TipoTramiteScheme = Schema({
+const RequerimientoScheme = Schema({
     nombre: {
         type: String,
         required: true
@@ -19,12 +18,12 @@ const TipoTramiteScheme = Schema({
     ],
     activo: {
         type: Boolean,
-        default:true
+        default: true
     }
 })
-TipoTramiteScheme.method('toJSON', function () {
+RequerimientoScheme.method('toJSON', function () {
     const { __v, _id, ...object } = this.toObject()
-    object.id_tipoTramite = _id
+    object.id_requerimiento = _id
     return object
 })
-module.exports = model('tipos_tramites', TipoTramiteScheme)
+module.exports = model('requerimientos', RequerimientoScheme)
