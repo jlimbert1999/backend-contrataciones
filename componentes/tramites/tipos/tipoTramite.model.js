@@ -5,6 +5,10 @@ const TipoTramiteScheme = Schema({
         type: String,
         required: true
     },
+    segmento: {
+        type: String,
+        required: true
+    },
     requerimientos: [
         {
             nombre: {
@@ -19,7 +23,7 @@ const TipoTramiteScheme = Schema({
     ],
     activo: {
         type: Boolean,
-        default:true
+        default: true
     }
 })
 TipoTramiteScheme.method('toJSON', function () {

@@ -13,6 +13,6 @@ app.use(allroutes)
 
 
 
-app.listen(process.env.PORT, '192.168.1.11', () => {
+app.listen(process.env.PORT, '192.168.1.9', () => {
     console.log('Server listen in port', process.env.PORT)
 })

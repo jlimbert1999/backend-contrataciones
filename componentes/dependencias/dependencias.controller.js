@@ -4,7 +4,7 @@ const Institucion = require("../instituciones/instituciones.model");
 
 const obtener_instituciones = async (req = request, res = response) => {
   try {
-    const instituciones = await Institucion.find({ activo: true }, "nombre");
+    const instituciones = await Institucion.find({ activo: true }, "nombre sigla");
     res.json({
       ok: true,
       instituciones,
@@ -33,7 +33,6 @@ const obtener_dependencias = async (req = request, res = response) => {
         .limit(rows),
       Dependendencia.count(),
     ]);
-
     res.json({
       ok: true,
       dependencias,
@@ -59,7 +58,7 @@ const agregar_dependencia = async (req = request, res = response) => {
       });
     }
     const newDependencia = new Dependendencia(req.body);
-    const dependencia = newDependencia.save();
+    const dependencia = await newDependencia.save();
     res.json({
       ok: true,
       dependencia,
@@ -128,12 +127,29 @@ const cambiar_situacion_dependencia = async (req = request, res = response) => {
 };
 const buscar_dependencia = async (req = request, res = response) => {
   const termino = req.params.termino
+  let { pageIndex, rows } = req.query;
+  pageIndex = parseInt(pageIndex) || 0;
+  rows = parseInt(rows) || 10;
+  pageIndex = pageIndex * rows
   try {
     const regex = new RegExp(termino, 'i')
-    const dependencias = await Dependendencia.find({ $or: [{ nombre: regex }, { sigla: regex }] }).populate('institucion', 'sigla');
+    let [dependencias, total] = await Promise.all([
+      Dependendencia.find(
+        {
+          $or: [{ nombre: regex }, { sigla: regex }]
+        }).populate("institucion", "sigla")
+        .skip(pageIndex)
+        .limit(rows),
+      Dependendencia.find(
+        {
+          $or: [{ nombre: regex }, { sigla: regex }]
+        }
+      ).count(),
+    ])
     res.json({
       ok: true,
       dependencias,
+      total
     });
   } catch (error) {
     console.log(error);

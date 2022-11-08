@@ -88,12 +88,16 @@ const obtener_instituciones = async (req = request, res = response) => {
     }
 }
 const buscar_instituciones = async (req = request, res = response) => {
+    let { pageIndex, rows } = req.query
+    pageIndex = parseInt(pageIndex) || 0
+    rows = parseInt(rows) || 10
+    pageIndex = rows * pageIndex
     const termino = req.params.termino
     try {
         const regex = new RegExp(termino, 'i')
         const [instituciones, total] = await Promise.all(
             [
-                Institucion.find({ $or: [{ nombre: regex }, { sigla: regex }] }),
+                Institucion.find({ $or: [{ nombre: regex }, { sigla: regex }] }).skip(pageIndex).limit(rows),
                 Institucion.find({ $or: [{ nombre: regex }, { sigla: regex }] }).count()
             ]
         )

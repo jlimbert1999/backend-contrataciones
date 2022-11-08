@@ -1,13 +1,21 @@
 const { request, response } = require('express')
 const Cuenta = require('../cuentas/cuenta.model')
+const Usuario = require('../usuarios/usuarios.model')
 const bcrypt = require('bcrypt');
 const jwt = require('../../helpers/generate_token')
 
 const login = async (req = request, res = response) => {
     try {
         const { login, password } = req.body
-        const cuentaDB = await Cuenta.findOne({login}).populate('funcionario', 'nombre cargo').populate({path:'dependencia', select:'nombre',populate:{path:'institucion', select:'sigla'}})
-        if(!cuentaDB){  
+        const cuentaDB = await Cuenta.findOne({ login }).populate({
+            path: 'dependencia',
+            select: 'nombre -_id',
+            populate: {
+                path: 'institucion',
+                select: 'sigla -_id'
+            }
+        })
+        if (!cuentaDB) {
             return res.status(400).send({
                 ok: false,
                 message: "El Login o Contraseña no son correctos"
@@ -21,17 +29,19 @@ const login = async (req = request, res = response) => {
             })
         }
         let token
-        if(!cuentaDB.funcionario && !cuentaDB.dependencia && cuentaDB.rol==="admin"){
-            token=await jwt.generarToken(cuentaDB._id, "Administrador", 'Configuraciones', cuentaDB.rol, '', '')
+
+        if (!cuentaDB.funcionario && !cuentaDB.dependencia && cuentaDB.rol === "admin") {
+            token = await jwt.generarToken(cuentaDB._id, "Administrador", 'Configuraciones', cuentaDB.rol, '', '')
         }
-        else{
-            token = await jwt.generarToken(cuentaDB._id, cuentaDB.funcionario.nombre, cuentaDB.funcionario.cargo, cuentaDB.rol, cuentaDB.dependencia.nombre, cuentaDB.dependencia.institucion.sigla)
+        else {
+            const detallesFuncionario = await Usuario.findOne({ cuenta: cuentaDB._id })
+            token = await jwt.generarToken(cuentaDB._id, detallesFuncionario.nombre, detallesFuncionario.cargo, detallesFuncionario.rol, cuentaDB.dependencia.nombre, cuentaDB.dependencia.institucion.sigla)
         }
         res.send({
             ok: true,
             token
         })
-        
+
     } catch (error) {
         console.log(error);
         res.status(500).send({
@@ -39,17 +49,17 @@ const login = async (req = request, res = response) => {
             message: "error en login"
         })
     }
-  };
-  
+};
 
-const renovar_token=async(req = request, res = response)=>{
+
+const renovar_token = async (req = request, res = response) => {
     try {
-        const usuarioDb=await Cuenta.findById(req.id_cuenta)
+        const usuarioDb = await Cuenta.findById(req.id_cuenta)
         res.send({
             ok: true,
             token
         })
-        
+
     } catch (error) {
         console.log(error);
         res.status(500).send({
@@ -58,8 +68,8 @@ const renovar_token=async(req = request, res = response)=>{
         })
     }
 }
-  
 
-  module.exports={
+
+module.exports = {
     login
-  }
+}
