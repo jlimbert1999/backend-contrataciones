@@ -14,7 +14,7 @@ const login = async (req = request, res = response) => {
                 path: 'institucion',
                 select: 'sigla -_id'
             }
-        })
+        }).populate('funcionario', 'nombre cargo rol')
         if (!cuentaDB) {
             return res.status(400).send({
                 ok: false,
@@ -29,19 +29,16 @@ const login = async (req = request, res = response) => {
             })
         }
         let token
-
         if (!cuentaDB.funcionario && !cuentaDB.dependencia && cuentaDB.rol === "admin") {
             token = await jwt.generarToken(cuentaDB._id, "Administrador", 'Configuraciones', cuentaDB.rol, '', '')
         }
         else {
-            const detallesFuncionario = await Usuario.findOne({ cuenta: cuentaDB._id })
-            token = await jwt.generarToken(cuentaDB._id, detallesFuncionario.nombre, detallesFuncionario.cargo, detallesFuncionario.rol, cuentaDB.dependencia.nombre, cuentaDB.dependencia.institucion.sigla)
+            token = await jwt.generarToken(cuentaDB._id, cuentaDB.funcionario.nombre, cuentaDB.funcionario.cargo, cuentaDB.rol, cuentaDB.dependencia.nombre, cuentaDB.dependencia.institucion.sigla)
         }
         res.send({
             ok: true,
             token
         })
-
     } catch (error) {
         console.log(error);
         res.status(500).send({

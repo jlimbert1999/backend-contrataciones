@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken')
 const generarToken = (id_cuenta, funcionario, cargo, rol, dependencia, institucion) => {
+    
     return new Promise((resolve, reject) => {
         const payload = {
             id_cuenta,

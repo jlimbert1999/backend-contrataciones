@@ -15,18 +15,54 @@ const getMenuFrontend = (rol) => {
         modulo: "Usuarios",
         submodulos: [
           { nombre: 'Cuentas', ruta: 'cuentas', icon: 'account_circle' },
+          { nombre: 'Grupo de trabajo', ruta: 'funcionarios', icon: 'groups' }
         ]
       }
     ]
   }
-  if (rol == 'planificacion') {
+  else if (rol == 'planificacion') {
     Menu = [
       {
         modulo: "Administracion",
         submodulos: [
           { nombre: 'Tramites', ruta: 'tramites', icon: 'description' },
+          { nombre: 'Bandeja entrada', ruta: 'bandeja_entrada', icon: 'mail' },
+          { nombre: 'Bandeja salida', ruta: 'bandeja_salida', icon: 'drafts' },
         ]
+      },
+      {
+        modulo: "Reportes",
+        submodulos: [
+          { nombre: 'Registrados', ruta: 'control', icon: 'description' },
+        ]
+      }
 
+    ]
+  }
+  else if (rol == 'sicoes') {
+    Menu = [
+      {
+        modulo: "Administracion",
+        submodulos: [
+          { nombre: 'Bandeja entrada', ruta: 'bandeja_entrada', icon: 'mail' },
+          { nombre: 'Bandeja salida', ruta: 'bandeja_salida', icon: 'drafts' },
+        ]
+      },
+      {
+        modulo: "Reportes",
+        submodulos: [
+          { nombre: 'Registrados', ruta: 'control', icon: 'description' },
+        ]
+      }
+    ]
+  }
+  else if (rol == 'jefe') {
+    Menu = [
+      {
+        modulo: "Control",
+        submodulos: [
+          { nombre: 'Tramite', ruta: 'control', icon: 'description' },
+        ]
       }
 
     ]

@@ -10,13 +10,6 @@ const agregar_cuenta = async (req = request, res = response) => {
     const { login } = cuenta
     const { dni } = funcionario
     try {
-        const existeLogin = await Cuenta.findOne({ login })
-        if (existeLogin) {
-            return res.status(400).json({
-                ok: false,
-                message: 'login introducido ya existe'
-            })
-        }
         const existeDni = await Usuario.findOne({ dni })
         if (existeDni) {
             return res.status(400).json({
@@ -24,31 +17,35 @@ const agregar_cuenta = async (req = request, res = response) => {
                 message: 'El dni introducido ya existe'
             })
         }
-        const salt = bcrypt.genSaltSync();
-        cuenta.password = bcrypt.hashSync(cuenta.password.toString(), salt)
-        const newCuenta = new Cuenta(cuenta)
-        let cuentaDB = await newCuenta.save()
-
-        funcionario.cuenta = cuentaDB._id
+        const existeLogin = await Cuenta.findOne({ login })
+        if (existeLogin) {
+            return res.status(400).json({
+                ok: false,
+                message: 'login introducido ya existe'
+            })
+        }
+        // marcar como con cuenta
+        funcionario.cuenta = true
         const newUser = new Usuario(funcionario)
         let userdb = await newUser.save()
-        userdb = await userdb.populate(
-            {
-                path: 'cuenta',
-                select: '_id login rol',
-                populate: {
-                    path: 'dependencia',
-                    select: 'nombre -_id',
-                    populate: {
-                        path: 'institucion',
-                        select: 'sigla -_id'
-                    }
-                }
+
+        const salt = bcrypt.genSaltSync();
+        cuenta.password = bcrypt.hashSync(cuenta.password.toString(), salt)
+        cuenta.funcionario = userdb._id
+        const newCuenta = new Cuenta(cuenta)
+        let cuentaDB = await newCuenta.save()
+        //obtener todos los detalles de la cuenta
+        let detalles_cuenta = await Cuenta.findById(cuentaDB._id).populate({
+            path: 'dependencia',
+            select: 'nombre -_id',
+            populate: {
+                path: 'institucion',
+                select: 'sigla -_id'
             }
-        )
+        }).populate('funcionario')
         res.json({
             ok: true,
-            cuenta: userdb
+            cuenta: detalles_cuenta
         })
     } catch (error) {
         console.log(error);
@@ -67,20 +64,15 @@ const obtener_cuentas = async (req = request, res = response) => {
     try {
         const [cuentas, total] = await Promise.all(
             [
-                Usuario.find({}).sort({ _id: -1 }).skip(page).limit(rows)
-                    .populate({
-                        path: 'cuenta',
-                        select: '_id login rol',
-                        populate: {
-                            path: 'dependencia',
-                            select: 'nombre -_id',
-                            populate: {
-                                path: 'institucion',
-                                select: 'sigla -_id'
-                            }
-                        }
-                    }),
-                Usuario.count()
+                Cuenta.find({ funcionario: { $exists: true } }).select('login rol').sort({ _id: -1 }).skip(page).limit(rows).populate({
+                    path: 'dependencia',
+                    select: 'nombre -_id',
+                    populate: {
+                        path: 'institucion',
+                        select: 'sigla -_id'
+                    }
+                }).populate('funcionario'),
+                Cuenta.count()
             ]
         )
         res.json({
@@ -197,31 +189,30 @@ const asignar_cuenta = async (req = request, res = response) => {
     let { password } = newCuenta
     try {
         // marcar al funcionario actual como sin cuenta
-        await Usuario.findByIdAndUpdate(id_funcionarioActual, { cuenta: null })
+        await Usuario.findByIdAndUpdate(id_funcionarioActual, { cuenta: false })
 
-        //actualizar login y password de la nueva cuenta
+        //marcar al nueov funcionario con cuenta
+        await Usuario.findByIdAndUpdate(id_funcionarioNuevo, { cuenta: true })
+
+        //actualizar id funcionario, login y password de la nueva cuenta
         const salt = bcrypt.genSaltSync();
         password = password.toString()
         newCuenta.password = bcrypt.hashSync(password, salt)
-        await Cuenta.findByIdAndUpdate(id_cuenta, newCuenta)
+        newCuenta.funcionario = id_funcionarioNuevo
+        const cuenta = await Cuenta.findByIdAndUpdate(id_cuenta, newCuenta)
 
-        // asignar la cuenta al nuevo funcionario
-        const cuenta = await Usuario.findByIdAndUpdate(id_funcionarioNuevo, { cuenta: id_cuenta }, { new: true })
-            .populate({
-                path: 'cuenta',
-                select: '_id login rol',
-                populate: {
-                    path: 'dependencia',
-                    select: 'nombre -_id',
-                    populate: {
-                        path: 'institucion',
-                        select: 'sigla -_id'
-                    }
-                }
-            })
+        // recuperar informacion completa
+        let detalles_cuenta = await Cuenta.findById(cuenta._id).populate({
+            path: 'dependencia',
+            select: 'nombre -_id',
+            populate: {
+                path: 'institucion',
+                select: 'sigla -_id'
+            }
+        }).populate('funcionario')
         res.json({
             ok: true,
-            cuenta
+            cuenta: detalles_cuenta
         })
     } catch (error) {
         console.log(error);
@@ -267,7 +258,7 @@ const obtener_dependencias = async (req = request, res = response) => {
 }
 const obtener_funcionarios_asignacion = async (req = request, res = response) => {
     try {
-        const funcionarios = await Usuario.find({ cuenta: null, activo: true }, 'nombre cargo dni')
+        const funcionarios = await Usuario.find({ cuenta: false, activo: true }, 'nombre cargo dni')
         res.send({
             ok: true,
             funcionarios

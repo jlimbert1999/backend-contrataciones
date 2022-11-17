@@ -26,14 +26,13 @@ const UserScheme = Schema({
         default: true
     },
     cuenta: {
-        type: Schema.Types.ObjectId,
-        ref: 'cuentas'
+        type: Boolean,
+        default: false
     }
 })
 UserScheme.method('toJSON', function () {
     //convertir el documento mongoose a object
-    const { __v, _id, ...object } = this.toObject()
-    object.id_funcionario = _id
+    const { __v, ...object } = this.toObject()
     return object
 })
 

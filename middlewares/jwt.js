@@ -17,17 +17,17 @@ const verificarToken = (req, res, next) => {
             })
         }
         req.id_cuenta = decoded.id_cuenta;
-        req.rol=decoded.rol
+        req.rol = decoded.rol
         next()
     })
 }
 const verificarAdminRol = (req, res, next) => {
     if (req.rol !== "admin") {
-        return  res.status(403).json({
+        return res.status(403).json({
             of: false,
             message: "No tiene autoriacion"
         })
-    } 
+    }
     next()
 }
 module.exports = {

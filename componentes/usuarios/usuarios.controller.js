@@ -48,19 +48,7 @@ const editar_usuario = async (req = request, res = response) => {
                 })
             }
         }
-
-        const funcionario = await Usuario.findByIdAndUpdate(id_funcionario, req.body, { new: true }).populate({
-            path: 'cuenta',
-            select: '_id login rol',
-            populate: {
-                path: 'dependencia',
-                select: 'nombre -_id',
-                populate: {
-                    path: 'institucion',
-                    select: 'sigla -_id'
-                }
-            }
-        })
+        const funcionario = await Usuario.findByIdAndUpdate(id_funcionario, req.body, { new: true })
         res.json({
             ok: true,
             funcionario

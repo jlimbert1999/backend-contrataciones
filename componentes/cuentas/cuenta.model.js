@@ -17,7 +17,12 @@ const CuentasScheme = Schema({
     rol: {
         type: String,
         required: true
-    }
+    },
+    funcionario: {
+        type: Schema.Types.ObjectId,
+        ref: 'funcionarios'
+    },
+
 })
 CuentasScheme.method('toJSON', function () {
     const { __v, _id, ...object } = this.toObject()
