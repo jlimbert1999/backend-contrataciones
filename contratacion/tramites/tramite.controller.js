@@ -2,6 +2,8 @@ const Tramite = require('./tramite.model')
 const TiposTramites = require('../../componentes/tramites/tipos/tipoTramite.model')
 const BandejaSalida = require('../../contratacion/bandejas/bandeja-salida.model')
 const { request, response } = require('express')
+require('dotenv').config()
+
 const agregar_tramite = async (req = request, res = response) => {
     let data = req.body
     const id_cuenta = req.id_cuenta
@@ -10,7 +12,7 @@ const agregar_tramite = async (req = request, res = response) => {
         const regex = new RegExp(data.alterno, 'i')
         let correlativo = await Tramite.find({ alterno: regex }).count()
         correlativo = correlativo + 1
-        data.alterno = `${data.alterno}-${addLeadingZeros(correlativo, 5)}/${new Date().getFullYear()}`
+        data.alterno = `${data.alterno}-${addLeadingZeros(correlativo, 5)}/${process.env.CONFIG_YEAR}`
 
         data.cuenta = id_cuenta
         data.estado = 'INSCRITO'

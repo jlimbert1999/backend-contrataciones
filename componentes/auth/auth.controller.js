@@ -1,8 +1,8 @@
 const { request, response } = require('express')
 const Cuenta = require('../cuentas/cuenta.model')
-const Usuario = require('../usuarios/usuarios.model')
 const bcrypt = require('bcrypt');
 const jwt = require('../../helpers/generate_token')
+const { getMenuFrontend } = require('../../helpers/menu-frontend')
 
 const login = async (req = request, res = response) => {
     try {
@@ -14,7 +14,7 @@ const login = async (req = request, res = response) => {
                 path: 'institucion',
                 select: 'sigla -_id'
             }
-        }).populate('funcionario', 'nombre cargo rol')
+        }).populate('funcionario', 'nombre cargo')
         if (!cuentaDB) {
             return res.status(400).send({
                 ok: false,
@@ -51,22 +51,35 @@ const login = async (req = request, res = response) => {
 
 const renovar_token = async (req = request, res = response) => {
     try {
-        const usuarioDb = await Cuenta.findById(req.id_cuenta)
+        const cuentaDB = await Cuenta.findById(req.id_cuenta).populate({
+            path: 'dependencia',
+            select: 'nombre -_id',
+            populate: {
+                path: 'institucion',
+                select: 'sigla -_id'
+            }
+        }).populate('funcionario', 'nombre cargo')
+        let token
+        if (!cuentaDB.funcionario && !cuentaDB.dependencia && cuentaDB.rol === "admin") {
+            token = await jwt.generarToken(cuentaDB._id, "Administrador", 'Configuraciones', cuentaDB.rol, '', '')
+        }
+        else {
+            token = await jwt.generarToken(cuentaDB._id, cuentaDB.funcionario.nombre, cuentaDB.funcionario.cargo, cuentaDB.rol, cuentaDB.dependencia.nombre, cuentaDB.dependencia.institucion.sigla)
+        }
         res.send({
             ok: true,
-            token
+            token,
+            Menu: getMenuFrontend(cuentaDB.rol)
         })
-
     } catch (error) {
-        console.log(error);
+        console.log('[SERVER]: error renovar token:', error);
         res.status(500).send({
             ok: false,
-            message: "error en login"
+            message: "Error sesion en el servidor"
         })
     }
 }
-
-
 module.exports = {
-    login
+    login,
+    renovar_token
 }
